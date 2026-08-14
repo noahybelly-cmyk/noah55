@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wave Warp 2.0 — Noah55</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;padding:30px;background:#101522;color:#fff}main{max-width:800px;margin:auto;background:#1b2233;padding:25px;border-radius:20px}h1{margin-top:0}.control{margin:22px 0}.control label{display:flex;justify-content:space-between;margin-bottom:8px;font-weight:700}select,input{width:100%}output{color:#aeb7ff}.preview{height:300px;margin-top:25px;border-radius:18px;display:grid;place-items:center;overflow:hidden;background:#080c16}.gel{width:180px;height:180px;border-radius:45%;background:linear-gradient(135deg,#8b6cff,#ff78c8);animation:jelly var(--speed)s ease-in-out infinite;filter:url(#warp)}@keyframes jelly{0%,100%{transform:scale(1,1) rotate(0)}25%{transform:scale(1.12,.88) rotate(-3deg)}50%{transform:scale(.9,1.1) rotate(3deg)}75%{transform:scale(1.08,.94) rotate(-2deg)}}
+</style></head>
+<body><main>
+<h1>🌊 Wave Warp 2.0</h1>
+<p>Configuración de onda para un efecto de gelatina.</p>
+<div class="control"><label>Wave Type <output id="typeOut">Sine</output></label><select id="type"><option>Sine</option><option>Triangle</option><option>Square</option><option>Sawtooth</option></select></div>
+<div class="control"><label>Frequency <output id="freqOut">8</output></label><input id="freq" type="range" min="1" max="30" value="8"></div>
+<div class="control"><label>Speed <output id="speedOut">0.35</output></label><input id="speed" type="range" min="0.05" max="2" step="0.05" value="0.35"></div>
+<div class="control"><label>Phase / Offset <output id="phaseOut">0°</output></label><input id="phase" type="range" min="0" max="360" value="0"></div>
+<div class="control"><label>Direction <output id="dirOut">Horizontal</output></label><select id="dir"><option>Horizontal</option><option>Vertical</option></select></div>
+<div class="preview"><div class="gel" id="gel"></div></div>
+</main>
+<script>
+const freq=document.getElementById('freq'),speed=document.getElementById('speed'),phase=document.getElementById('phase'),type=document.getElementById('type'),dir=document.getElementById('dir'),gel=document.getElementById('gel');
+function update(){freqOut.textContent=freq.value;speedOut.textContent=speed.value;phaseOut.textContent=phase.value+'°';typeOut.textContent=type.value;dirOut.textContent=dir.value;gel.style.setProperty('--speed',speed.value+'s');gel.style.animationDelay=(-phase.value/360*speed.value)+'s';gel.style.animationDirection=dir.value==='Vertical'?'reverse':'normal'}
+[freq,speed,phase,type,dir].forEach(x=>x.addEventListener('input',update));update();
+</script></body></html>
