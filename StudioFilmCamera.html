@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StudioFilmCamera — Noah55</title>
+<style>
+:root{font-family:Inter,system-ui,sans-serif;color:#eef2ff;background:#090d16}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 20% 0%,#283858,#090d16 52%);padding:24px}.wrap{max-width:1180px;margin:auto}.hero,.card{background:#ffffff09;border:1px solid #ffffff18;border-radius:20px;box-shadow:0 18px 60px #0008}.hero{padding:24px}.hero h1{margin:0 0 8px;font-size:clamp(34px,6vw,58px)}.hero p{margin:0;color:#b9c3da;line-height:1.6}.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;margin-top:18px}.preview{min-height:570px;padding:18px;display:grid;place-items:center;overflow:hidden}.stage{position:relative;width:min(900px,100%);aspect-ratio:16/10;background:#05070b;overflow:hidden;border-radius:10px;border:1px solid #ffffff16}.stage canvas{width:100%;height:100%;display:block}.panel{padding:20px;max-height:calc(100vh - 48px);overflow:auto}.upload{border:1px dashed #7b89a8;border-radius:14px;padding:14px;text-align:center;margin-bottom:18px;color:#c2cbe0}.upload input{width:100%;margin-top:10px}.control{margin:16px 0}.control label{display:flex;justify-content:space-between;gap:10px;font-weight:700;margin-bottom:7px}.control output{color:#aeb8ff;font-variant-numeric:tabular-nums}.control input[type=range],select{width:100%}select,input[type=color]{border:1px solid #ffffff18;border-radius:9px;background:#ffffff0b;color:#fff;padding:9px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}.actions button{border:0;border-radius:10px;padding:11px;background:#6d5dfc;color:white;font-weight:750;cursor:pointer}.actions button.secondary{background:#ffffff12}.help{margin-top:18px;padding-top:16px;border-top:1px solid #ffffff15;color:#aeb8d2;font-size:13px;line-height:1.6}.presetline{display:flex;gap:8px;align-items:center}.presetline select{flex:1}.toggle{display:flex;align-items:center;gap:8px}.toggle input{width:18px;height:18px}@media(max-width:850px){.grid{grid-template-columns:1fr}.panel{max-height:none}.preview{min-height:0}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<section class="hero">
+<h1>🎞️ StudioFilmCamera</h1>
+<p>Simula el movimiento irregular, el parpadeo y el borde de una película rodada con una cámara de cine antigua de manivela.</p>
+</section>
+<section class="grid">
+<div class="card preview"><div class="stage"><canvas id="canvas"></canvas></div></div>
+<aside class="card panel">
+<h2>Film Camera</h2>
+<div class="upload">📁 Carga una imagen o video<input id="media" type="file" accept="image/*,video/*"></div>
+<div class="control"><label>Presets <output id="presetOut">Custom</output></label><select id="preset"><option value="custom">Custom</option><option value="earthquake">Earthquake!</option><option value="oldfilm">Old Film</option><option value="subtle">Subtle</option><option value="heavy">Heavy Jitter</option></select></div>
+<div class="control"><label>Y Jitter <output id="yOut">18.00</output></label><input id="yj" type="range" min="0" max="100" step="0.1" value="18"></div>
+<div class="control"><label>X Jitter <output id="xOut">18.00</output></label><input id="xj" type="range" min="0" max="100" step="0.1" value="18"></div>
+<div class="control"><label>Border</label><input id="border" type="color" value="#000000"></div>
+<div class="control"><label>Flicker <output id="flickerOut">20.00</output></label><input id="flicker" type="range" min="0" max="100" step="0.1" value="20"></div>
+<div class="control"><label>Flicker Rate <output id="rateOut">8.00</output></label><input id="rate" type="range" min="0.1" max="30" step="0.1" value="8"></div>
+<div class="control toggle"><input id="grain" type="checkbox" checked><label for="grain">Film grain</label></div>
+<div class="actions"><button id="reset">↺ Reset</button><button id="snapshot">🖼️ Snapshot</button><button id="save" class="secondary">💾 Save preset</button><button id="load" class="secondary">↩ Load preset</button></div>
+<div class="help">X/Y Jitter randomly shifts every frame. Flicker changes brightness. Flicker Rate controls how quickly the brightness changes. The border fills the exposed edges created by jitter.</div>
+</aside>
+</section>
+</main>
+<script>
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+const media=document.getElementById('media'),yj=document.getElementById('yj'),xj=document.getElementById('xj'),border=document.getElementById('border'),flicker=document.getElementById('flicker'),rate=document.getElementById('rate'),grain=document.getElementById('grain'),preset=document.getElementById('preset');
+let source=null,video=null,image=null,sourceUrl='',lastFlicker=0,flickerValue=1,lastTime=0;
+const presets={earthquake:{x:100,y:100,f:61.5,r:19.5},oldfilm:{x:8,y:10,f:24,r:7},subtle:{x:2.5,y:2.5,f:9,r:3},heavy:{x:38,y:42,f:45,r:12}};
+function fit(){const dpr=devicePixelRatio||1;const rect=canvas.getBoundingClientRect();canvas.width=Math.max(1,Math.round(rect.width*dpr));canvas.height=Math.max(1,Math.round(rect.height*dpr));ctx.setTransform(dpr,0,0,dpr,0,0)}
+function outputs(){yOut.textContent=(+yj.value).toFixed(2);xOut.textContent=(+xj.value).toFixed(2);flickerOut.textContent=(+flicker.value).toFixed(2);rateOut.textContent=(+rate.value).toFixed(2);presetOut.textContent=preset.options[preset.selectedIndex].text}
+function applyPreset(name){const p=presets[name];if(!p)return; xj.value=p.x;yj.value=p.y;flicker.value=p.f;rate.value=p.r;outputs()}
+preset.addEventListener('input',()=>{if(preset.value!=='custom')applyPreset(preset.value);outputs()});
+[yj,xj,flicker,rate,grain,border].forEach(el=>el.addEventListener('input',()=>{preset.value='custom';outputs()}));
+function setSource(file){if(sourceUrl)URL.revokeObjectURL(sourceUrl);sourceUrl=URL.createObjectURL(file);if(video){video.pause();video.remove();video=null}image=null;if(file.type.startsWith('video/')){video=document.createElement('video');video.src=sourceUrl;video.muted=true;video.loop=true;video.playsInline=true;video.preload='auto';video.addEventListener('loadedmetadata',()=>{video.play().catch(()=>{});draw(performance.now())},{once:true})}else{image=new Image();image.onload=()=>draw(performance.now());image.src=sourceUrl}}
+media.addEventListener('change',e=>{const f=e.target.files[0];if(f)setSource(f)});
+function draw(now){const rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height;ctx.save();ctx.clearRect(0,0,w,h);ctx.fillStyle=border.value;ctx.fillRect(0,0,w,h);const visible=video?.readyState>=2||image?.complete;if(visible){const s=video||image,sw=s.videoWidth||s.naturalWidth,sh=s.videoHeight||s.naturalHeight;const scale=Math.max(w/sw,h/sh);const dw=sw*scale,dh=sh*scale;let dx=(w-dw)/2,dy=(h-dh)/2;if(now-lastFlicker>1000/Math.max(.1,+rate.value)){const strength=+flicker.value/100;flickerValue=1+(Math.random()*2-1)*strength;lastFlicker=now}const jx=(Math.random()*2-1)*(+xj.value),jy=(Math.random()*2-1)*(+yj.value);ctx.save();ctx.translate(jx, jy);ctx.globalAlpha=Math.max(.05,Math.min(2,flickerValue));ctx.drawImage(s,dx,dy,dw,dh);ctx.restore();if(grain.checked){ctx.save();ctx.globalAlpha=.07;const count=Math.min(14000,Math.round(w*h/45));for(let i=0;i<count;i++){const px=Math.random()*w,py=Math.random()*h,v=Math.random()*255;ctx.fillStyle=`rgb(${v},${v},${v})`;ctx.fillRect(px,py,1,1)}ctx.restore()}}else{ctx.fillStyle='#aeb8d2';ctx.font='700 18px system-ui';ctx.textAlign='center';ctx.fillText('Carga una imagen o video para comenzar',w/2,h/2)}ctx.restore();requestAnimationFrame(draw)}
+window.addEventListener('resize',fit);fit();outputs();draw(performance.now());
+reset.addEventListener('click',()=>{xj.value=18;yj.value=18;flicker.value=20;rate.value=8;border.value='#000000';grain.checked=true;preset.value='custom';outputs()});
+snapshot.addEventListener('click',()=>{const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='studio-film-camera.png';a.click()});
+save.addEventListener('click',()=>localStorage.setItem('StudioFilmCameraPreset',JSON.stringify({x:xj.value,y:yj.value,border:border.value,f:flicker.value,r:rate.value,grain:grain.checked})));
+load.addEventListener('click',()=>{const p=JSON.parse(localStorage.getItem('StudioFilmCameraPreset')||'null');if(!p)return alert('No hay un preset guardado.');xj.value=p.x;yj.value=p.y;border.value=p.border||'#000000';flicker.value=p.f;rate.value=p.r;grain.checked=p.grain!==false;preset.value='custom';outputs()});
+</script>
+</body>
+</html>
